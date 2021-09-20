@@ -12,6 +12,9 @@ class Group(models.Model):
     def __str__(self):
         return self.title
 
+    class Meta:
+        ordering = ["title"]
+
 
 class Follow(models.Model):
     user = models.ForeignKey(
@@ -20,6 +23,9 @@ class Follow(models.Model):
     following = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name='following',
     )
+
+    class Meta:
+        ordering = ["following"]
 
 
 class Post(models.Model):
@@ -30,7 +36,7 @@ class Post(models.Model):
     image = models.ImageField(
         upload_to='posts/', null=True, blank=True)
     group = models.ForeignKey(
-        Group, on_delete=models.CASCADE,
+        Group, on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name='posts'
@@ -38,6 +44,9 @@ class Post(models.Model):
 
     def __str__(self):
         return self.text
+
+    class Meta:
+        ordering = ["author"]
 
 
 class Comment(models.Model):
@@ -48,3 +57,6 @@ class Comment(models.Model):
     text = models.TextField()
     created = models.DateTimeField(
         'Дата добавления', auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ["-created"]

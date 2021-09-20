@@ -1,43 +1,44 @@
 from django.shortcuts import get_object_or_404
-from posts.models import Comment, Follow, Group, Post
+
+from rest_framework.pagination import LimitOffsetPagination
 from rest_framework import filters, mixins, viewsets
-from rest_framework.exceptions import ValidationError
-from rest_framework.permissions import (IsAuthenticated,
-                                        IsAuthenticatedOrReadOnly)
+from rest_framework.permissions import (
+    IsAuthenticated,
+    IsAuthenticatedOrReadOnly,
+)
 
+from posts.models import Group, Post
 from .permissions import AuthorOnly
-from .serializers import (CommentSerializer, FollowSerializer, GroupSerializer,
-                          PostSerializer)
+from .serializers import (
+    CommentSerializer,
+    FollowSerializer,
+    GroupSerializer,
+    PostSerializer,
+)
 
 
-class BaseViewSet(viewsets.ModelViewSet):
+class PostViewSet(viewsets.ModelViewSet):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
     permission_classes = [IsAuthenticatedOrReadOnly, AuthorOnly]
+    pagination_class = LimitOffsetPagination
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
-    def get_permissions(self):
-        if self.action == 'retrieve':
-            return [IsAuthenticatedOrReadOnly()]
-        return super().get_permissions()
 
-
-class PostViewSet(BaseViewSet):
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
-
-
-class CommentViewSet(BaseViewSet):
+class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly, AuthorOnly]
 
     def get_queryset(self):
-        post = get_object_or_404(Post, id=self.kwargs['post_id'])
-        return Comment.objects.filter(post=post)
+        post = get_object_or_404(Post, id=self.kwargs.get('post_id'))
+        return post.comments.all()
 
     def perform_create(self, serializer):
         serializer.save(
             author=self.request.user,
-            post_id=self.kwargs['post_id']
+            post_id=self.kwargs.get('post_id')
         )
 
 
@@ -49,11 +50,6 @@ class GroupViewSet(
     queryset = Group.objects.all()
     permission_classes = [IsAuthenticatedOrReadOnly, AuthorOnly]
     serializer_class = GroupSerializer
-
-    def get_permissions(self):
-        if self.action == 'retrieve':
-            return [IsAuthenticatedOrReadOnly()]
-        return super().get_permissions()
 
 
 class FollowViewSet(
@@ -67,10 +63,7 @@ class FollowViewSet(
     search_fields = ['=following__username']
 
     def get_queryset(self):
-        return Follow.objects.filter(user=self.request.user)
+        return self.request.user.follower.all()
 
     def perform_create(self, serializer):
-        print(self.request.data.keys())
-        if self.request.user.username == self.request.data.get('following'):
-            raise ValidationError('Нельзя подписаться на себя')
         serializer.save(user=self.request.user)
