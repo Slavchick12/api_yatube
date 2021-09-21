@@ -8,7 +8,7 @@ from rest_framework.permissions import (
 )
 
 from posts.models import Group, Post
-from .permissions import AuthorOnly
+from .permissions import AuthorOnlyAndReadOnly
 from .serializers import (
     CommentSerializer,
     FollowSerializer,
@@ -20,7 +20,7 @@ from .serializers import (
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly, AuthorOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly, AuthorOnlyAndReadOnly]
     pagination_class = LimitOffsetPagination
 
     def perform_create(self, serializer):
@@ -29,16 +29,17 @@ class PostViewSet(viewsets.ModelViewSet):
 
 class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly, AuthorOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly, AuthorOnlyAndReadOnly]
 
     def get_queryset(self):
         post = get_object_or_404(Post, id=self.kwargs.get('post_id'))
         return post.comments.all()
 
     def perform_create(self, serializer):
+        post = get_object_or_404(Post, id=self.kwargs.get('post_id'))
         serializer.save(
             author=self.request.user,
-            post_id=self.kwargs.get('post_id')
+            post_id=post.id
         )
 
 
@@ -48,7 +49,7 @@ class GroupViewSet(
     viewsets.GenericViewSet
 ):
     queryset = Group.objects.all()
-    permission_classes = [IsAuthenticatedOrReadOnly, AuthorOnly]
+    permission_classes = [IsAuthenticatedOrReadOnly, AuthorOnlyAndReadOnly]
     serializer_class = GroupSerializer
 
 

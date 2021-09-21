@@ -13,7 +13,7 @@ class Group(models.Model):
         return self.title
 
     class Meta:
-        ordering = ["title"]
+        ordering = ('title',)
 
 
 class Follow(models.Model):
@@ -25,7 +25,7 @@ class Follow(models.Model):
     )
 
     class Meta:
-        ordering = ["following"]
+        ordering = ('user', 'following',)
 
 
 class Post(models.Model):
@@ -46,7 +46,7 @@ class Post(models.Model):
         return self.text
 
     class Meta:
-        ordering = ["author"]
+        ordering = ('author', 'pub_date',)
 
 
 class Comment(models.Model):
@@ -59,4 +59,4 @@ class Comment(models.Model):
         'Дата добавления', auto_now_add=True, db_index=True)
 
     class Meta:
-        ordering = ["-created"]
+        ordering = ('-created',)
