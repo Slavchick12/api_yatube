@@ -40,5 +40,5 @@ python3 manage.py runserver
 ```
 ## Используется:
 ```
-Python 3.9, Django 2.2, Simple JWT
+Python 3.9, Django 2.2, Django REST Framework, SQLite3, Simple-JWT
 ```
